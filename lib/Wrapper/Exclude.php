@@ -3,6 +3,8 @@
  * @copyright 2016 Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @author Roeland Jago Douma <roeland@famdouma.nl>
+ * @author Alan J. Pippin <alan@pippins.net>
+ * @author Guy Elsmore-Paddock <guy@inveniem.com>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -38,16 +40,17 @@ class Exclude extends Wrapper {
 	 */
 	public function __construct($parameters) {
 		parent::__construct($parameters);
+
 		$this->exclude = $parameters['exclude'];
 	}
 
 	/**
-	 * Check if the path contains an ignored direcotry
+	 * Check if the path contains an ignored directory.
 	 *
 	 * @param string $path
 	 * @return bool
 	 */
-	private function excludedPath($path) {
+	private function excludedPath(string $path): bool {
 		if ($path === '') {
 			return false;
 		}
@@ -56,12 +59,14 @@ class Exclude extends Wrapper {
 			// glob requires all paths to be absolute so we put /'s in front of them
 			if (strpos($rule, '/') !== false) {
 				$rule = '/' . rtrim($rule, '/');
-				if(Glob::match('/' . $path, $rule)) {
+
+				if (Glob::match('/' . $path, $rule)) {
 					return true;
 				}
 			} else {
 				$parts = explode('/', $path);
 				$rule = '/' . $rule;
+
 				foreach ($parts as $part) {
 					if (Glob::match('/' . $part, $rule)) {
 						return true;
@@ -73,7 +78,7 @@ class Exclude extends Wrapper {
 		return false;
 	}
 
-	public function file_exists($path) {
+	public function file_exists($path): bool {
 		if ($this->excludedPath($path)) {
 			return false;
 		}
@@ -84,14 +89,20 @@ class Exclude extends Wrapper {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function opendir($path) {
+	public function opendir($path): bool {
 		$directoryIterator = $this->iterateDirectory($path);
 
 		if ($directoryIterator) {
-			$filteredDirectory = new \CallbackFilterIterator($directoryIterator, function ($name) use ($path) {
-				return !$this->excludedPath($path . '/' . $name);
-			});
+			$filteredDirectory =
+				new \CallbackFilterIterator(
+					$directoryIterator,
+					function ($name) use ($path) {
+						return !$this->excludedPath($path . '/' . $name);
+					}
+				);
+
 			$filteredDirectory->rewind();
+
 			return IteratorDirectory::wrap($filteredDirectory);
 		}
 
@@ -104,21 +115,24 @@ class Exclude extends Wrapper {
 		}
 
 		$handle = $this->storage->opendir($path);
+
 		while ($file = readdir($handle)) {
 			if ($file !== '.' && $file !== '..') {
 				yield $file;
 			}
 		}
+
+		return false;
 	}
 
 	/**
 	 * {@inheritdoc}
-	 * Todo: throw forbiddenexception??
 	 */
-	public function getMetaData($path) {
+	public function getMetaData($path): ?array {
 		if ($this->excludedPath($path)) {
 			return null;
 		}
+
 		return $this->getWrapperStorage()->getMetaData($path);
 	}
 }
