@@ -27,6 +27,7 @@ namespace OCA\Files_ExcludeDirs\Wrapper;
 
 use Icewind\Streams\IteratorDirectory;
 use OC\Files\Storage\Wrapper\Wrapper;
+use OCP\Files\InvalidDirectoryException;
 use Webmozart\Glob\Glob;
 
 /**
@@ -45,6 +46,18 @@ class Exclude extends Wrapper {
 		parent::__construct($parameters);
 
 		$this->exclude = $parameters['exclude'];
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function verifyPath($path, $fileName) {
+		if ($this->excludedPath($path) ||
+				$this->excludedPath(implode(DIRECTORY_SEPARATOR, [$path, $fileName]))) {
+			throw new InvalidDirectoryException();
+		}
+
+  	parent::verifyPath($path, $fileName);
 	}
 
 	/**
