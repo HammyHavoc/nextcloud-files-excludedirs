@@ -88,8 +88,11 @@ class Exclude extends Wrapper {
 
 	/**
 	 * {@inheritdoc}
-	 */
-	public function opendir($path): bool {
+   *
+   * @noinspection PhpMissingReturnTypeInspection
+   * @noinspection SpellCheckingInspection
+   */
+	public function opendir($path) {
 		$directoryIterator = $this->iterateDirectory($path);
 
 		if ($directoryIterator) {
