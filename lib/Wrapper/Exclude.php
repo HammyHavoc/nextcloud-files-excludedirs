@@ -29,6 +29,9 @@ use Icewind\Streams\IteratorDirectory;
 use OC\Files\Storage\Wrapper\Wrapper;
 use Webmozart\Glob\Glob;
 
+/**
+ * A wrapper around the Nextcloud filesystem that filters out unwanted folders.
+ */
 class Exclude extends Wrapper {
 	/**
 	 * @var string[] Directories to exclude
@@ -45,10 +48,14 @@ class Exclude extends Wrapper {
 	}
 
 	/**
-	 * Check if the path contains an ignored directory.
+	 * Check if a particular path matches the pattern for a directory to ignore.
 	 *
 	 * @param string $path
+	 *   The absolute or relative path to check.
+	 *
 	 * @return bool
+	 *   true if the path should be excluded/skipped, or false if it should be
+	 *   processed.
 	 */
 	private function excludedPath(string $path): bool {
 		if ($path === '') {
@@ -78,6 +85,9 @@ class Exclude extends Wrapper {
 		return false;
 	}
 
+	/**
+	 * {@inheritdoc}
+	 */
 	public function file_exists($path): bool {
 		if ($this->excludedPath($path)) {
 			return false;
